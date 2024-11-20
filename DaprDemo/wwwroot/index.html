@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Client</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">API Client</h1>
+        <div class="text-center mt-4">
+            <button class="btn btn-primary mr-2" onclick="callApi()">Call API</button>
+            <input type="number" id="numberInput" class="form-control d-inline-block w-auto mr-2" placeholder="Enter number">
+            <button class="btn btn-success" onclick="setNumber()">Set Number</button>
+        </div>
+        <div id="result" class="mt-4 text-center"></div>
+    </div>
+    <script>
+        function callApi() {
+            fetch('/sample/invoke')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerText = JSON.stringify(data);
+                })
+                .catch(error => {
+                    document.getElementById('result').innerText = 'Error: ' + error;
+                });
+        }
+
+        function setNumber() {
+            const number = document.getElementById('numberInput').value;
+            fetch('/sample/set', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ number: parseInt(number) })
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('result').innerText = 'Number set successfully';
+                } else {
+                    document.getElementById('result').innerText = 'Failed to set number';
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+@DaprDemo_HostAddress = http://localhost:5079
+
+GET {{DaprDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

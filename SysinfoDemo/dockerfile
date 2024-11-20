@@ -1,0 +1,35 @@
+# Use a lightweight Alpine image and install lighttpd
+FROM alpine:latest
+
+# Install lighttpd and bash for running shell scripts
+RUN apk add --no-cache lighttpd bash
+
+# Configure lighttpd with CGI enabled
+RUN mkdir -p /etc/lighttpd && \
+    echo 'server.modules += ( "mod_cgi" )' > /etc/lighttpd/lighttpd.conf && \
+    echo 'server.modules += ( "mod_setenv" )' >> /etc/lighttpd/lighttpd.conf && \
+    echo 'cgi.assign = ( ".sh" => "/bin/bash" )' >> /etc/lighttpd/lighttpd.conf && \
+    echo 'server.document-root = "/var/www/localhost/htdocs"' >> /etc/lighttpd/lighttpd.conf && \
+    echo 'server.port = 80' >> /etc/lighttpd/lighttpd.conf && \
+    echo 'setenv.add-environment = ( "BG_COLOR" => env.BG_COLOR )' >> /etc/lighttpd/lighttpd.conf && \
+    echo 'index-file.names = ( "env_info.sh" )' >> /etc/lighttpd/lighttpd.conf
+
+# Create the CGI script to display environment information
+RUN mkdir -p /var/www/localhost/htdocs && \
+    echo '#!/bin/bash' > /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "Content-type: text/html"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo ""' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'BG_COLOR=${BG_COLOR:-lightgreen}' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "<html><body style=\"background-color: $BG_COLOR;\"><h1>Environment Information</h1>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "<p><strong>Container Name:</strong> $(hostname)</p>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "<p><strong>OS Information:</strong></p><pre>$(cat /etc/os-release)</pre>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "<p><strong>Memory Usage:</strong></p><pre>$(free -h)</pre>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "<p><strong>Disk Usage:</strong></p><pre>$(df -h)</pre>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    echo 'echo "</body></html>"' >> /var/www/localhost/htdocs/env_info.sh && \
+    chmod +x /var/www/localhost/htdocs/env_info.sh
+
+# Expose port 80
+EXPOSE 80
+
+# Start lighttpd and serve the CGI script
+CMD ["lighttpd", "-D", "-f", "/etc/lighttpd/lighttpd.conf"]
